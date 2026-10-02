@@ -1,0 +1,10 @@
+{
+  "name": "LiquidPay",
+  "short_name": "LiquidPay",
+  "description": "UPI payments without internet",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#93a6a7",
+  "theme_color": "#93a6a7",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

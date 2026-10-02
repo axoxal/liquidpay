@@ -1,26 +1,166 @@
 @import "tailwindcss";
 
+/* LiquidPay — palette from the Paier-style moodboard: sage canvas, chunky
+   rounded tiles in mint / forest / sun / lilac / olive / sky, navy ink, and a
+   lime brand mark. Liquid-glass panels float over soft colour blobs. */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --canvas: #93a6a7;
+  --canvas-2: #839799;
+  --ink: #13212f;
+  --ink-soft: #3a4a58;
+  --paper: #f4f6f1;
+  --mint: #c4f2dc;
+  --mint-line: #a6ebc9;
+  --forest: #0f7a4c;
+  --forest-ink: #e7fff3;
+  --lime: #e4f78a;
+  --sun: #ffd21f;
+  --lilac: #cfbcf6;
+  --violet: #9b7de6;
+  --olive: #8d914f;
+  --sky: #c1e4ea;
+  --stone: #b4b7af;
+  --danger: #e2553d;
+
+  --glass-bg: rgba(255, 255, 255, 0.22);
+  --glass-strong: rgba(255, 255, 255, 0.42);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-shine: rgba(255, 255, 255, 0.7);
+  --glass-blur: 22px;
+  --shadow: 0 10px 30px -12px rgba(19, 33, 47, 0.35);
+}
+
+[data-theme="night"] {
+  --canvas: #0e1820;
+  --canvas-2: #142330;
+  --ink: #eaf2ee;
+  --ink-soft: #a8b8b4;
+  --paper: #18262f;
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-strong: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.14);
+  --glass-shine: rgba(255, 255, 255, 0.22);
+  --shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.7);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-canvas: var(--canvas);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-paper: var(--paper);
+  --color-mint: var(--mint);
+  --color-mint-line: var(--mint-line);
+  --color-forest: var(--forest);
+  --color-forest-ink: var(--forest-ink);
+  --color-lime: var(--lime);
+  --color-sun: var(--sun);
+  --color-lilac: var(--lilac);
+  --color-violet: var(--violet);
+  --color-olive: var(--olive);
+  --color-sky: var(--sky);
+  --color-stone: var(--stone);
+  --color-danger: var(--danger);
+  --color-navy: #13212f;
+  --font-sans: var(--font-display), var(--font-deva), var(--font-mlym), ui-sans-serif, system-ui;
+  --radius-tile: 28px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+html,
+body {
+  background: var(--canvas);
+  color: var(--ink);
+}
+body {
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Floating colour blobs the glass refracts. Disabled in lite mode. */
+.blobs {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.blobs span {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(40px);
+  opacity: 0.75;
+  animation: drift 18s ease-in-out infinite alternate;
+}
+@keyframes drift {
+  to {
+    transform: translate3d(30px, -40px, 0) scale(1.1);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.glass {
+  background: linear-gradient(160deg, var(--glass-strong), var(--glass-bg));
+  backdrop-filter: blur(var(--glass-blur)) saturate(170%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(170%);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    inset 0 1px 0 var(--glass-shine),
+    var(--shadow);
+}
+
+/* Chunky solid tiles, Paier-style: thick soft outline. */
+.tile {
+  border-radius: var(--radius-tile);
+  border: 3px solid rgba(255, 255, 255, 0.55);
+  box-shadow: var(--shadow);
+}
+
+/* Lite mode: low-end Android phones stutter on large backdrop blurs. */
+[data-lite="true"] .glass {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: var(--paper);
+}
+[data-lite="true"] .blobs {
+  display: none;
+}
+[data-lite="true"] * {
+  animation-duration: 0s !important;
+  transition-duration: 0s !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blobs span {
+    animation: none;
+  }
+}
+
+.press {
+  transition: transform 0.15s ease;
+}
+.press:active {
+  transform: scale(0.96);
+}
+
+.scan-line {
+  animation: scan 2.2s ease-in-out infinite alternate;
+}
+@keyframes scan {
+  from {
+    top: 8%;
+  }
+  to {
+    top: 88%;
+  }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+:focus-visible {
+  outline: 3px solid var(--violet);
+  outline-offset: 2px;
 }

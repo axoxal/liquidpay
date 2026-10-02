@@ -1,0 +1,28 @@
+LiquidPay
+Copyright 2026 LiquidPay contributors
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+================================================================================
+Derived work
+================================================================================
+The UPI engine in lib/upi/ (QR parser, UPI 123Pay dial-string builder, bank-SMS
+parser and the payment-session invariant) is a TypeScript port of code from
+Flowpay — Payments Without Internet
+https://github.com/Flowpayup/Payments-Without-Internet
+Copyright 2026 Flowpay. Licensed under the Apache License, Version 2.0.
+Modifications: ported from Kotlin to TypeScript, added rail routing for
+Jio/dual-SIM, upi:// intent builder, and browser/native bridge.
+
+LiquidPay is not affiliated with Flowpay, NPCI, any bank or any telecom
+operator. "UPI", "UPI 123PAY" and "*99#" are referenced descriptively.
+
+================================================================================
+Third-party components (bundled in the web build)
+================================================================================
+Next.js, React — MIT
+zustand — MIT
+qrcode (node-qrcode) — MIT
+jsQR — Apache-2.0
+lucide-react — ISC
+Fonts: Bricolage Grotesque, Noto Sans Devanagari, Noto Sans Malayalam — SIL OFL 1.1
