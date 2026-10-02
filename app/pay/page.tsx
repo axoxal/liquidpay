@@ -10,7 +10,8 @@ import { routePayment, type PayTarget, type RailId } from "@/lib/upi/rails";
 import { normalizeMobile } from "@/lib/upi/dial";
 import { PHONE_REGEX } from "@/lib/upi/constants";
 import { createSession, reduceSession } from "@/lib/upi/session";
-import { copyText, openPaymentUri } from "@/lib/native";
+import { copyText, isNativeApp, LiquidPay, openPaymentUri } from "@/lib/native";
+import { overlayLabels } from "@/lib/overlay";
 import { inr, initials, maskMobile } from "@/lib/format";
 import { RailPicker } from "@/components/RailPicker";
 import { Button, Field, Glass, Header, inputCls } from "@/components/ui";
@@ -62,9 +63,16 @@ function Pay() {
   const payeeId = vpa ?? mobile;
   const amountValid = Number(amount) >= 1;
   const contactsApi = typeof navigator !== "undefined" ? (navigator as Navigator & { contacts?: ContactsManager }).contacts : undefined;
+  const canPick = isNativeApp() || !!contactsApi;
 
   const pickContact = async () => {
     try {
+      if (isNativeApp()) {
+        const c = await LiquidPay.pickContact();
+        setPhone(normalizeMobile(c.phone));
+        if (c.name) setName(c.name);
+        return;
+      }
       const [c] = (await contactsApi?.select(["name", "tel"])) ?? [];
       if (c?.tel?.[0]) setPhone(normalizeMobile(c.tel[0]));
       if (c?.name?.[0]) setName(c.name[0]);
@@ -80,11 +88,18 @@ function Pay() {
       router.replace("/activity?f=pending");
       return;
     }
+    if (isNativeApp() && rail.href?.startsWith("tel:")) {
+      const p = await LiquidPay.checkPermissions();
+      if (p.phone !== "granted") {
+        const r = await LiquidPay.requestPermissions({ permissions: ["phone", "sms", "answer"] });
+        if (r.phone !== "granted") return;
+      }
+    }
     const now = Date.now();
     const s = reduceSession(createSession({ id: uid(), rail: rail.id, amount, payeeLabel, payeeId }, now), { type: "DIAL", now });
     setSession(s);
     if (rail.copyText) await copyText(rail.copyText);
-    if (rail.href) await openPaymentUri(rail.href, rail.simSlot);
+    if (rail.href) await openPaymentUri(rail.href, { simSlot: rail.simSlot, rail: rail.id, labels: overlayLabels(t, payeeLabel, amount) });
     router.push("/session");
   };
 
@@ -115,7 +130,7 @@ function Pay() {
                   placeholder={t("pay.mobile.ph")}
                   maxLength={16}
                 />
-                {contactsApi && (
+                {canPick && (
                   <button type="button" onClick={pickContact} aria-label="Pick contact" className="press glass grid size-14 shrink-0 place-items-center rounded-2xl">
                     <BookUser size={22} />
                   </button>

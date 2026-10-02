@@ -9,6 +9,8 @@ import { BANKS } from "@/lib/banks";
 import type { Carrier, Sim } from "@/lib/upi/rails";
 import { UPI123PAY_DEFAULT_CAP, UPI123PAY_RBI_CAP, VPA_REGEX } from "@/lib/upi/constants";
 import { Glass, Header, Segmented, Toggle, Field, inputCls } from "@/components/ui";
+import { PermissionsPanel } from "@/components/PermissionsPanel";
+import { isNativeApp } from "@/lib/native";
 
 const CARRIERS: Carrier[] = ["jio", "airtel", "vi", "bsnl", "other"];
 const selectCls = "glass h-12 w-full rounded-2xl px-3 font-semibold text-ink outline-none";
@@ -28,6 +30,7 @@ export default function SettingsPage() {
     <div className="pb-8">
       <Header title={t("settings.title")} />
       <div className="space-y-4 px-5">
+        {isNativeApp() && <PermissionsPanel />}
         <Glass className="space-y-4 p-4">
           <Field label={t("settings.language")}>
             <Segmented label={t("settings.language")} value={s.lang} onChange={(v) => setSettings({ lang: v as Lang })} options={LANGUAGES.map((l) => ({ id: l.id, label: l.native }))} />

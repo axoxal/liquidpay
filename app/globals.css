@@ -164,3 +164,14 @@ body {
   outline: 3px solid var(--violet);
   outline-offset: 2px;
 }
+
+/* App feel: taps on controls must not start text selection or the long-press menu. */
+button,
+a,
+[role="radio"],
+[role="switch"],
+[role="checkbox"] {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}

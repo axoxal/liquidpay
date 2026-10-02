@@ -14,7 +14,7 @@ async function walk(dir) {
   return files.flat();
 }
 
-const files = (await walk(OUT)).filter((f) => !SKIP.has(path.basename(f)) && !f.endsWith(".map"));
+const files = (await walk(OUT)).filter((f) => !SKIP.has(path.basename(f)) && !f.endsWith(".map") && !f.endsWith(".apk"));
 const hash = createHash("sha256");
 const urls = new Set();
 

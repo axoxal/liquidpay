@@ -161,3 +161,17 @@ describe("payment session", () => {
     expect(reduceSession(base(), { type: "TICK", now: 10 * 60 * 1000 }).phase).toBe("timeout");
   });
 });
+
+import { detectCarrier } from "./carrier";
+describe("carrier detection", () => {
+  it("maps Android carrier names", () => {
+    expect(detectCarrier("Jio 4G")).toBe("jio");
+    expect(detectCarrier("JIO")).toBe("jio");
+    expect(detectCarrier("airtel")).toBe("airtel");
+    expect(detectCarrier("Vi India")).toBe("vi");
+    expect(detectCarrier("Vodafone IN")).toBe("vi");
+    expect(detectCarrier("BSNL MOBILE")).toBe("bsnl");
+    expect(detectCarrier("Unknown", "405", "857")).toBe("jio");
+    expect(detectCarrier("Unknown", "404", "10")).toBe("other");
+  });
+});

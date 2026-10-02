@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Lock, PhoneCall, ShieldCheck, MessageSquareLock } from "lucide-react";
 import { useApp, type Lang } from "@/lib/store";
@@ -10,6 +10,9 @@ import type { Carrier, Sim } from "@/lib/upi/rails";
 import { VPA_REGEX } from "@/lib/upi/constants";
 import { LogoMark } from "@/components/Logo";
 import { Button, Field, Glass, cx, inputCls } from "@/components/ui";
+import { PermissionsPanel } from "@/components/PermissionsPanel";
+import { isNativeApp, type NativeSim } from "@/lib/native";
+import { detectCarrier } from "@/lib/upi/carrier";
 
 const CARRIERS: { id: Carrier | "none"; label: string; tone: string }[] = [
   { id: "jio", label: "Jio", tone: "bg-sky" },
@@ -30,6 +33,15 @@ export default function Onboarding() {
   const [name, setName] = useState(settings.name);
   const [upiId, setUpiId] = useState(settings.upiId);
   const [agreed, setAgreed] = useState(false);
+
+  const [native] = useState(isNativeApp);
+  // Real SIMs from Android: pre-select carriers so Jio users get 123Pay automatically.
+  const onSims = useCallback((list: NativeSim[]) => {
+    const one = list.find((x) => x.slot === 1) ?? list[0];
+    const two = list.find((x) => x !== one);
+    if (one) setSim1(detectCarrier(one.carrierName, one.mcc, one.mnc));
+    setSim2(two ? detectCarrier(two.carrierName, two.mcc, two.mnc) : "none");
+  }, []);
 
   const upiError = upiId && !VPA_REGEX.test(upiId.trim()) ? "name@bank" : null;
   const steps = 5;
@@ -103,6 +115,11 @@ export default function Onboarding() {
           <>
             <h1 className="text-3xl font-bold tracking-tight">{t("onb.sims.title")}</h1>
             <p className="mt-2 text-ink-soft">{t("onb.sims.body")}</p>
+            {native && (
+              <div className="mt-5">
+                <PermissionsPanel onSims={onSims} />
+              </div>
+            )}
             {[1, 2].map((slot) => {
               const value = slot === 1 ? sim1 : sim2;
               const opts = slot === 1 ? CARRIERS.filter((c) => c.id !== "none") : [...CARRIERS, { id: "none" as const, label: t("onb.sim.none"), tone: "bg-white/60" }];

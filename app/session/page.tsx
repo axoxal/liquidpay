@@ -8,7 +8,8 @@ import { useApp, type TxnStatus } from "@/lib/store";
 import { useT, type MessageKey } from "@/lib/i18n";
 import { isTerminal, reduceSession, type SessionEvent, type Session } from "@/lib/upi/session";
 import { routePayment } from "@/lib/upi/rails";
-import { native, openPaymentUri, platform, copyText } from "@/lib/native";
+import { isNativeApp, LiquidPay, openPaymentUri, platform, copyText } from "@/lib/native";
+import { overlayLabels } from "@/lib/overlay";
 import { demoSender, demoSmsBody } from "@/lib/banks";
 import { inr } from "@/lib/format";
 import { useOnline } from "@/lib/hooks";
@@ -30,7 +31,8 @@ export default function SessionPage() {
   const [now, setNow] = useState(() => Date.now());
   const [sms, setSms] = useState("");
   const [showPaste, setShowPaste] = useState(false);
-  const [canDial] = useState(() => !!native() || platform().mobile);
+  const [canDial] = useState(() => platform().native || platform().mobile);
+  const [callStage, setCallStage] = useState<"calling" | "waiting" | "ringing" | null>(null);
 
   const dispatch = useCallback(
     (e: SessionEvent) => {
@@ -54,6 +56,12 @@ export default function SessionPage() {
             bank: next.confirmation?.bankName,
             reference: next.confirmation?.reference,
           });
+        if (isNativeApp()) {
+          // The bank has settled it: hang up any call still open (Flowpay's
+          // endCallOnConfirmation), close the SMS window and drop the overlay.
+          if (next.phase === "success" || next.phase === "failed") void LiquidPay.endCall().catch(() => {});
+          void LiquidPay.finishPayment().catch(() => {});
+        }
       }
     },
     [setSession, addTxn],
@@ -69,15 +77,33 @@ export default function SessionPage() {
     return () => clearInterval(id);
   }, [dispatch]);
 
-  // Native Android build: real call-state and SMS events.
+  // Native Android app: real call-state and bank SMS.
   useEffect(() => {
-    const b = native();
-    if (!b) return;
-    const off1 = b.onSms((sender, body) => dispatch({ type: "SMS", sender, body, now: Date.now() }));
-    const off2 = b.onCallEnded((durationMs) => dispatch({ type: "CALL_ENDED", now: Date.now(), durationMs }));
+    if (!isNativeApp()) return;
+    const drain = async () => {
+      const { messages } = await LiquidPay.takePendingSms();
+      for (const m of messages) dispatch({ type: "SMS", sender: m.sender, body: m.body, now: m.at });
+    };
+    const handles = [
+      LiquidPay.addListener("sms", () => void drain()),
+      LiquidPay.addListener("callState", (e) => {
+        if (e.state === "offhook") setCallStage((s) => (s === "ringing" ? null : s ?? "calling"));
+        if (e.state === "ringing") setCallStage("ringing");
+        if (e.state === "idle" && e.first) {
+          setCallStage("waiting");
+          dispatch({ type: "CALL_ENDED", now: Date.now(), durationMs: e.durationMs });
+        }
+      }),
+      LiquidPay.addListener("overlayAction", (e) => {
+        if (e.action === "endCall") dispatch({ type: "CALL_ENDED", now: Date.now() });
+      }),
+    ];
+    const onVisible = () => document.visibilityState === "visible" && void drain();
+    document.addEventListener("visibilitychange", onVisible);
+    void drain();
     return () => {
-      off1();
-      off2();
+      document.removeEventListener("visibilitychange", onVisible);
+      handles.forEach((h) => void h.then((x) => x.remove()));
     };
   }, [dispatch]);
 
@@ -127,7 +153,7 @@ export default function SessionPage() {
   return (
     <div className="pb-8">
       <Header title={t("session.title")} back={false} right={
-        <button type="button" onClick={() => dispatch({ type: "CANCEL" })} className="press glass rounded-full px-4 py-2 text-sm font-semibold">
+        <button type="button" onClick={() => { dispatch({ type: "CANCEL" }); if (isNativeApp()) void LiquidPay.finishPayment().catch(() => {}); }} className="press glass rounded-full px-4 py-2 text-sm font-semibold">
           {t("common.cancel")}
         </button>
       } />
@@ -140,7 +166,15 @@ export default function SessionPage() {
               <span className="absolute inline-flex size-full animate-ping rounded-full bg-lime opacity-70" />
               <span className="relative inline-flex size-3 rounded-full bg-lime" />
             </span>
-            <span className="flex-1 font-semibold">{session.phase === "awaitingSms" ? t("session.awaiting") : t("session.dialing")}</span>
+            <span className="flex-1 font-semibold">
+              {callStage === "ringing"
+                ? t("session.ringing")
+                : callStage === "waiting" && session.rail === "ivr123"
+                  ? t("session.waitingCallback")
+                  : session.phase === "awaitingSms"
+                    ? t("session.awaiting")
+                    : t("session.dialing")}
+            </span>
             <span className="flex items-center gap-1 text-white/70 tabular-nums">
               <Clock3 size={14} /> {t("session.timer", { m: mm, s: ss })}
             </span>
@@ -170,7 +204,7 @@ export default function SessionPage() {
         )}
 
         <div className="grid grid-cols-2 gap-3">
-          <Button tone="lime" size="md" onClick={() => opt?.href && openPaymentUri(opt.href, opt.simSlot)} disabled={!opt?.href}>
+          <Button tone="lime" size="md" onClick={() => opt?.href && openPaymentUri(opt.href, { simSlot: opt.simSlot, rail: opt.id, labels: overlayLabels(t, session.payeeLabel, session.amount) })} disabled={!opt?.href}>
             <PhoneCall size={18} /> {session.rail === "online" ? t("session.openApp") : t("session.callAgain")}
           </Button>
           <Button tone="glass" size="md" onClick={() => dispatch({ type: "CALL_ENDED", now: Date.now() })} disabled={session.phase !== "dialing"}>
@@ -203,7 +237,7 @@ export default function SessionPage() {
               </Button>
             </div>
           )}
-          <p className="mt-3 text-xs text-ink-soft">{t("session.autoNote")}</p>
+          {!isNativeApp() && <p className="mt-3 text-xs text-ink-soft">{t("session.autoNote")}</p>}
         </Glass>
 
         {(settings.demoTools || !canDial) && (
