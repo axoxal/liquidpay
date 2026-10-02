@@ -71,13 +71,24 @@ export default function SettingsPage() {
               options={[{ id: String(UPI123PAY_DEFAULT_CAP), label: "₹4,999" }, { id: String(UPI123PAY_RBI_CAP), label: "₹10,000" }]}
             />
           </Field>
-          <div className="flex items-center gap-3">
-            <div className="flex-1">
-              <p className="font-semibold">Demo: pretend offline</p>
-              <p className="text-xs text-ink-soft">Shows offline routing while your laptop has internet</p>
+        </Glass>
+
+        <Glass className="space-y-4 p-4">
+          <p className="font-bold">{t("settings.developer")}</p>
+          {(
+            [
+              ["demoTools", "settings.demo", "settings.demo.sub"],
+              ["demoOffline", "settings.demoOffline", "settings.demoOffline.sub"],
+            ] as const
+          ).map(([key, label, sub]) => (
+            <div key={key} className="flex items-center gap-3">
+              <div className="flex-1">
+                <p className="font-semibold">{t(label)}</p>
+                <p className="text-xs text-ink-soft">{t(sub)}</p>
+              </div>
+              <Toggle checked={s[key]} onChange={(v) => setSettings({ [key]: v })} label={t(label)} />
             </div>
-            <Toggle checked={s.demoOffline} onChange={(v) => setSettings({ demoOffline: v })} label="Pretend offline" />
-          </div>
+          ))}
         </Glass>
 
         <Glass className="space-y-3 p-4">

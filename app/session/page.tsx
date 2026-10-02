@@ -165,7 +165,7 @@ export default function SessionPage() {
 
         {!canDial && (
           <p className="rounded-2xl bg-sun/80 p-3 text-sm font-medium text-navy">
-            This device can&apos;t place calls. Open this page on your Android phone (same Wi-Fi) to dial for real, or use the demo SMS below.
+            {t("session.noDial")}
           </p>
         )}
 
@@ -206,9 +206,11 @@ export default function SessionPage() {
           <p className="mt-3 text-xs text-ink-soft">{t("session.autoNote")}</p>
         </Glass>
 
-        <Button tone="lilac" size="md" className="w-full" onClick={() => submitSms(demoSmsBody(settings.bank, session.amount, session.payeeLabel))}>
-          <Sparkles size={18} /> {t("session.demoSms")}
-        </Button>
+        {(settings.demoTools || !canDial) && (
+          <Button tone="lilac" size="md" className="w-full" onClick={() => submitSms(demoSmsBody(settings.bank, session.amount, session.payeeLabel))}>
+            <Sparkles size={18} /> {t("session.demoSms")}
+          </Button>
+        )}
         <button type="button" onClick={() => dispatch({ type: "USER_CONFIRMED" })} className="w-full py-2 text-sm font-semibold text-ink-soft underline underline-offset-4">
           {t("session.iPaid")}
         </button>
@@ -247,7 +249,7 @@ function Result({ session, onHome }: { session: Session; onHome: () => void }) {
           <Glass className="mt-6 divide-y divide-white/40 p-2 text-left text-sm">
             <Row k={t("result.bank")} v={c.bankName} />
             {c.reference && <Row k={t("result.ref")} v={c.reference} mono />}
-            <Row k="Route" v={session.rail === "ivr123" ? "UPI 123Pay" : session.rail === "ussd" ? "*99# USSD" : "UPI app"} />
+            <Row k={t("result.route")} v={session.rail === "ivr123" ? "UPI 123Pay" : session.rail === "ussd" ? "*99# USSD" : "UPI app"} />
           </Glass>
         )}
       </div>

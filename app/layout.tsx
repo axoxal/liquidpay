@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Noto_Sans_Devanagari, Noto_Sans_Malayalam } from "next/font/google";
 import { AppShell } from "@/components/AppShell";
+import { ServiceWorker } from "@/components/ServiceWorker";
 import "./globals.css";
 
 const display = Bricolage_Grotesque({ variable: "--font-display", subsets: ["latin"] });
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" data-theme="day" className={`${display.variable} ${deva.variable} ${mlym.variable} antialiased`}>
       <body className="min-h-dvh">
         <AppShell>{children}</AppShell>
+        <ServiceWorker />
       </body>
     </html>
   );

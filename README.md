@@ -2,6 +2,8 @@
 
 UPI payments without internet: an open-source, liquid-glass payments app for India.
 
+**Live:** https://liquidpay.vercel.app  (works offline after the first visit; install it from the browser menu with "Add to Home screen")
+
 LiquidPay puts a modern UI on the two offline UPI rails that already exist on every Indian SIM:
 
 - **UPI 123Pay (IVR call):** works on every network, including Jio. LiquidPay builds the DTMF dial string, so the call enters the menu, recipient and amount for you. You type your UPI PIN into your bank's call; the app never sees it.
@@ -36,6 +38,7 @@ The routing logic is in `lib/upi/rails.ts` and is unit-tested.
 ```bash
 npm install
 npm run dev -- -H 0.0.0.0     # http://localhost:3000
+npm run build                 # static export to out/ + offline service worker
 npm test                      # UPI engine unit tests
 ```
 

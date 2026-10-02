@@ -241,5 +241,15 @@ const ml: Messages = {
   "settings.reset": "ആപ്പ് ഡാറ്റ റീസെറ്റ്",
   "settings.reset.confirm": "ഈ ഉപകരണത്തിലെ എല്ലാ പേയ്‌മെന്റും ഖാതയും സെറ്റിംഗ്സും മായ്ക്കണോ?",
   "settings.about": "ഓപ്പൺ സോഴ്സ് · Apache-2.0 · Flowpay അടിസ്ഥാനമാക്കി",
+  "session.noDial": "ഈ ഉപകരണത്തിന് കോൾ ചെയ്യാനാകില്ല. യഥാർത്ഥ കോളിന് Android ഫോണിൽ LiquidPay തുറക്കുക.",
+  "result.route": "വഴി",
+  "settings.developer": "ടെസ്റ്റിംഗ്",
+  "settings.demo": "ഡെമോ ടൂളുകൾ",
+  "settings.demo.sub": "സാമ്പിൾ QR കോഡുകളും സിമുലേറ്റ് ചെയ്ത ബാങ്ക് SMS-ഉം",
+  "settings.demoOffline": "ഓഫ്‌ലൈൻ ആയി കണക്കാക്കുക",
+  "settings.demoOffline.sub": "ഇന്റർനെറ്റ് ഉള്ളപ്പോഴും ഓഫ്‌ലൈൻ റൂട്ടിംഗ് കാണിക്കും",
+  "error.title": "എന്തോ പിശക് സംഭവിച്ചു",
+  "error.retry": "വീണ്ടും ശ്രമിക്കുക",
+  "notFound.title": "പേജ് കണ്ടെത്തിയില്ല",
 };
 export default ml;

@@ -238,6 +238,16 @@ const en = {
   "settings.reset": "Reset app data",
   "settings.reset.confirm": "Delete all payments, Khata and settings on this device?",
   "settings.about": "Open source · Apache-2.0 · Built on Flowpay",
+  "session.noDial": "This device can't place calls. Open LiquidPay on your Android phone to dial for real.",
+  "result.route": "Route",
+  "settings.developer": "Testing",
+  "settings.demo": "Demo tools",
+  "settings.demo.sub": "Sample QR codes and a simulated bank SMS",
+  "settings.demoOffline": "Pretend offline",
+  "settings.demoOffline.sub": "Shows offline routing while you have internet",
+  "error.title": "Something went wrong",
+  "error.retry": "Try again",
+  "notFound.title": "Page not found",
 } as const;
 
 export type MessageKey = keyof typeof en;

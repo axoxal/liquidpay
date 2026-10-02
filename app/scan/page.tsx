@@ -18,6 +18,7 @@ export default function ScanPage() {
   const t = useT();
   const router = useRouter();
   const sims = useApp((s) => s.settings.sims);
+  const demoTools = useApp((s) => s.settings.demoTools);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -146,13 +147,13 @@ export default function ScanPage() {
             <ClipboardPaste size={18} /> {t("scan.paste")}
           </Button>
         </div>
-        <div className="flex gap-2">
+        {demoTools && <div className="flex gap-2">
           {DEMO_QRS.map((d) => (
             <button key={d.label} type="button" onClick={() => handle(d.raw)} className="press flex flex-1 items-center justify-center gap-1.5 rounded-full bg-white/15 px-3 py-2 text-xs font-semibold backdrop-blur">
               <Sparkles size={14} /> {d.label}
             </button>
           ))}
-        </div>
+        </div>}
         <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} />
       </div>
     </div>

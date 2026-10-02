@@ -241,5 +241,15 @@ const hi: Messages = {
   "settings.reset": "ऐप डेटा रीसेट करें",
   "settings.reset.confirm": "इस डिवाइस से सभी पेमेंट, खाता और सेटिंग्स हटाएँ?",
   "settings.about": "ओपन सोर्स · Apache-2.0 · Flowpay पर आधारित",
+  "session.noDial": "यह डिवाइस कॉल नहीं कर सकता। असली कॉल के लिए अपने Android फ़ोन पर LiquidPay खोलें।",
+  "result.route": "तरीका",
+  "settings.developer": "टेस्टिंग",
+  "settings.demo": "डेमो टूल",
+  "settings.demo.sub": "सैंपल QR कोड और सिमुलेटेड बैंक SMS",
+  "settings.demoOffline": "ऑफ़लाइन मानें",
+  "settings.demoOffline.sub": "इंटरनेट होने पर भी ऑफ़लाइन रूटिंग दिखाता है",
+  "error.title": "कुछ गड़बड़ हो गई",
+  "error.retry": "फिर कोशिश करें",
+  "notFound.title": "पेज नहीं मिला",
 };
 export default hi;

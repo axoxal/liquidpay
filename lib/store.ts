@@ -54,6 +54,8 @@ export interface Settings {
   walletWaitlist: boolean;
   /** Demo: pretend there is no internet so offline routing can be shown on desktop. */
   demoOffline: boolean;
+  /** Show sample QRs and the simulated bank SMS button. */
+  demoTools: boolean;
 }
 
 interface State {
@@ -89,6 +91,7 @@ const defaultSettings: Settings = {
   plan: "free",
   walletWaitlist: false,
   demoOffline: false,
+  demoTools: false,
 };
 
 export const useApp = create<State>()(
@@ -116,7 +119,15 @@ export const useApp = create<State>()(
         })),
       reset: () => set({ settings: defaultSettings, txns: [], khata: [], session: null }),
     }),
-    { name: "liquidpay", version: 1 },
+    {
+      name: "liquidpay",
+      version: 1,
+      // Deep-merge settings so fields added in later releases get their defaults.
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<State>;
+        return { ...current, ...p, settings: { ...current.settings, ...p.settings } };
+      },
+    },
   ),
 );
 
