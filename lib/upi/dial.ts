@@ -39,7 +39,22 @@ export function normalizeMobile(input: string): string {
 export function build123PayDial(
   phoneNumber: string,
   amount: string,
-  opts: { cap?: number; serviceNumber?: string; pauses?: number } = {},
+  opts: {
+    cap?: number;
+    serviceNumber?: string;
+    /** Pauses (~2 s each) between steps. */
+    pauses?: number;
+    /** Pauses before the first key, to let the welcome message finish. */
+    startPauses?: number;
+    /** Key for the IVR's language menu, if it asks one first ("" = none). */
+    langKey?: string;
+    /**
+     * Guided: use ";" (dialer WAIT) instead of timed pauses. The phone's dialer
+     * then shows "Send tones?" at each step and the user taps it when the
+     * voice asks — the digits are still pre-filled. Works when timing doesn't.
+     */
+    guided?: boolean;
+  } = {},
 ): IvrResult {
   const service = (opts.serviceNumber ?? UPI123PAY_SERVICE_NUMBER).replace(/\D/g, "");
   const cap = opts.cap ?? UPI123PAY_DEFAULT_CAP;
@@ -55,9 +70,18 @@ export function build123PayDial(
 
   // Each "," is ~2 s. Slower IVRs drop digits sent before the prompt finishes,
   // so the gap is configurable (default 2 = Flowpay's field-tested string).
-  const n = Math.min(6, Math.max(1, Math.round(opts.pauses ?? 2)));
-  const gap = ",".repeat(n);
-  return { ok: true, href: `tel:${service}${gap}1,${phone}${gap}${value}${gap}1` };
+  const clamp = (v: number) => Math.min(8, Math.max(1, Math.round(v)));
+  const n = clamp(opts.pauses ?? 2);
+  const gap = opts.guided ? ";" : ",".repeat(n);
+  const start = opts.guided ? ";" : ",".repeat(clamp(opts.startPauses ?? n));
+  const lang = /^[0-9]$/.test(opts.langKey ?? "") ? opts.langKey! : "";
+  const steps = [...(lang ? [lang] : []), "1", phone, String(value), "1"];
+  // Legacy timed string kept byte-identical: "1" directly after a single ","
+  // following the start gap (tel:SVC,,1,PHONE,,AMT,,1).
+  if (!opts.guided && !lang && opts.startPauses === undefined) {
+    return { ok: true, href: `tel:${service}${gap}1,${phone}${gap}${value}${gap}1` };
+  }
+  return { ok: true, href: `tel:${service}${start}${steps.join(gap)}` };
 }
 
 /** `tel:` URI for a USSD code. `#` must be percent-encoded or dialers truncate at it. */

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle2, Clock3, MessageSquareText, PhoneCall, PhoneOff, ShieldAlert, Sparkles, XCircle, Share2 } from "lucide-react";
-import { useApp, type TxnStatus } from "@/lib/store";
+import { useApp, ivrRouteOpts, type TxnStatus } from "@/lib/store";
 import { useT, type MessageKey } from "@/lib/i18n";
 import { isTerminal, reduceSession, type SessionEvent, type Session } from "@/lib/upi/session";
 import { routePayment } from "@/lib/upi/rails";
@@ -133,8 +133,7 @@ export default function SessionPage() {
     amount: session.amount,
     sims: settings.sims,
     online,
-    ivrCap: settings.ivrCap,
-    ivrPauses: settings.ivrPauses,
+    ...ivrRouteOpts(settings),
   }).find((o) => o.id === session.rail);
 
   const left = Math.max(0, (session.deadline ?? now) - now);
@@ -142,7 +141,9 @@ export default function SessionPage() {
   const ss = String(Math.floor((left % 60000) / 1000)).padStart(2, "0");
 
   const steps: MessageKey[] =
-    session.rail === "ivr123"
+    session.rail === "ivr123" && settings.ivrGuided
+      ? ["session.step.guided.1", "session.step.guided.2", "session.step.ivr.2", "session.step.ivr.3"]
+      : session.rail === "ivr123"
       ? ["session.step.ivr.1", "session.step.ivr.2", "session.step.ivr.3"]
       : session.rail === "ussd"
         ? ["session.step.ussd.1", "session.step.ussd.2", "session.step.ussd.3"]
@@ -209,7 +210,7 @@ export default function SessionPage() {
         )}
 
         <div className="grid grid-cols-2 gap-3">
-          <Button tone="lime" size="md" onClick={() => opt?.href && openPaymentUri(opt.href, { simSlot: opt.simSlot, rail: opt.id, labels: overlayLabels(t, session.payeeLabel, session.amount), listen: settings.ivrListen })} disabled={!opt?.href}>
+          <Button tone="lime" size="md" onClick={() => opt?.href && openPaymentUri(opt.href, { simSlot: opt.simSlot, rail: opt.id, labels: overlayLabels(t, session.payeeLabel, session.amount), listen: settings.ivrListen || settings.ivrGuided })} disabled={!opt?.href}>
             <PhoneCall size={18} /> {session.rail === "online" ? t("session.openApp") : t("session.callAgain")}
           </Button>
           <Button tone="glass" size="md" onClick={() => dispatch({ type: "CALL_ENDED", now: Date.now() })} disabled={session.phase !== "dialing"}>
@@ -225,8 +226,15 @@ export default function SessionPage() {
 
         {session.rail === "ivr123" && callMs !== null && callMs < 25000 && (
           <div role="status" className="rounded-2xl bg-sun/80 p-3 text-sm font-medium text-navy">
-            {t("session.shortCall")}{" "}
+            {callMs < 25000 && callMs >= 0 && t("session.shortCall")}{" "}
             <Link href="/settings#ivr" className="font-bold underline">{t("session.setup")}</Link>
+          </div>
+        )}
+
+        {session.rail === "ivr123" && !settings.ivrGuided && callMs !== null && callMs >= 25000 && callStage === "waiting" && (
+          <div role="status" className="rounded-2xl bg-sky/80 p-3 text-sm font-medium text-navy">
+            {t("session.noDigits")}{" "}
+            <Link href="/settings#ivr" className="font-bold underline">{t("settings.title")}</Link>
           </div>
         )}
 

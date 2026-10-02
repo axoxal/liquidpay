@@ -103,19 +103,44 @@ export default function SettingsPage() {
           </div>
           <div className="flex items-center gap-3">
             <div className="flex-1">
+              <p className="font-semibold">{t("settings.ivrGuided")}</p>
+              <p className="text-xs text-ink-soft">{t("settings.ivrGuided.sub")}</p>
+            </div>
+            <Toggle checked={s.ivrGuided} onChange={(v) => setSettings({ ivrGuided: v })} label={t("settings.ivrGuided")} />
+          </div>
+          {!s.ivrGuided && (
+            <Field label={t("settings.ivrStart")} hint={t("settings.ivrStart.sub")}>
+              <Segmented
+                label={t("settings.ivrStart")}
+                value={String(s.ivrStartPauses)}
+                onChange={(v) => setSettings({ ivrStartPauses: Number(v) })}
+                options={[{ id: "3", label: "6s" }, { id: "5", label: "10s" }, { id: "7", label: "14s" }]}
+              />
+            </Field>
+          )}
+          <Field label={t("settings.ivrLang")} hint={t("settings.ivrLang.sub")}>
+            <Segmented
+              label={t("settings.ivrLang")}
+              value={s.ivrLangKey || "none"}
+              onChange={(v) => setSettings({ ivrLangKey: v === "none" ? "" : v })}
+              options={[{ id: "none", label: t("settings.none") }, { id: "1", label: "1" }, { id: "2", label: "2" }, { id: "3", label: "3" }]}
+            />
+          </Field>
+          <div className="flex items-center gap-3">
+            <div className="flex-1">
               <p className="font-semibold">{t("settings.ivrListen")}</p>
               <p className="text-xs text-ink-soft">{t("settings.ivrListen.sub")}</p>
             </div>
             <Toggle checked={s.ivrListen} onChange={(v) => setSettings({ ivrListen: v })} label={t("settings.ivrListen")} />
           </div>
-          <Field label={t("settings.ivrPauses")} hint={t("settings.ivrPauses.sub")}>
+          {!s.ivrGuided && <Field label={t("settings.ivrPauses")} hint={t("settings.ivrPauses.sub")}>
             <Segmented
               label={t("settings.ivrPauses")}
               value={String(s.ivrPauses)}
               onChange={(v) => setSettings({ ivrPauses: Number(v) })}
               options={[{ id: "2", label: "4s" }, { id: "3", label: "6s" }, { id: "4", label: "8s" }]}
             />
-          </Field>
+          </Field>}
         </Glass>
 
         <Glass className="space-y-4 p-4">

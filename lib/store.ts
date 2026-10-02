@@ -60,6 +60,12 @@ export interface Settings {
   ivrListen: boolean;
   /** Dialer pauses (~2 s each) between 123Pay digits. */
   ivrPauses: number;
+  /** Pauses (~2 s) before the first key, while the welcome message plays. */
+  ivrStartPauses: number;
+  /** Language-menu key the IVR asks first ("" = none). */
+  ivrLangKey: string;
+  /** Tap-to-send each step via the dialer instead of timed pauses. */
+  ivrGuided: boolean;
 }
 
 interface State {
@@ -98,6 +104,9 @@ const defaultSettings: Settings = {
   demoTools: false,
   ivrListen: false,
   ivrPauses: 2,
+  ivrStartPauses: 5,
+  ivrLangKey: "",
+  ivrGuided: false,
 };
 
 export const useApp = create<State>()(
@@ -140,3 +149,12 @@ export const useApp = create<State>()(
 /** Positive = customer owes you. */
 export const khataBalance = (c: KhataCustomer) =>
   c.entries.reduce((sum, e) => sum + (e.type === "gave" ? e.amount : -e.amount), 0);
+
+/** 123Pay routing options from settings (shared by Pay and Session screens). */
+export const ivrRouteOpts = (s: Settings) => ({
+  ivrCap: s.ivrCap,
+  ivrPauses: s.ivrPauses,
+  ivrStartPauses: s.ivrStartPauses,
+  ivrLangKey: s.ivrLangKey,
+  ivrGuided: s.ivrGuided,
+});

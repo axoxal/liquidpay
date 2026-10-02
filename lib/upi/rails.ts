@@ -46,11 +46,14 @@ export interface RouteInput {
   ivrCap?: number;
   /** Dialer pauses between 123Pay digits. */
   ivrPauses?: number;
+  ivrStartPauses?: number;
+  ivrLangKey?: string;
+  ivrGuided?: boolean;
 }
 
 export const supportsUssd = (c: Carrier) => c !== "jio";
 
-export function routePayment({ target, amount, sims, online, ivrCap = UPI123PAY_DEFAULT_CAP, ivrPauses }: RouteInput): RailOption[] {
+export function routePayment({ target, amount, sims, online, ivrCap = UPI123PAY_DEFAULT_CAP, ivrPauses, ivrStartPauses, ivrLangKey, ivrGuided }: RouteInput): RailOption[] {
   const value = Number(amount);
   const amountOk = Number.isFinite(value) && value >= MIN_AMOUNT && value <= MAX_AMOUNT;
   const out: RailOption[] = [];
@@ -73,7 +76,7 @@ export function routePayment({ target, amount, sims, online, ivrCap = UPI123PAY_
   if (!phone) {
     out.push({ id: "ivr123", available: false, blocker: "NO_MOBILE_PAYEE" });
   } else {
-    const r = build123PayDial(phone, amount, { cap: ivrCap, pauses: ivrPauses });
+    const r = build123PayDial(phone, amount, { cap: ivrCap, pauses: ivrPauses, startPauses: ivrStartPauses, langKey: ivrLangKey, guided: ivrGuided });
     out.push(r.ok ? { id: "ivr123", available: true, href: r.href } : { id: "ivr123", available: false, blocker: r.reason });
   }
 

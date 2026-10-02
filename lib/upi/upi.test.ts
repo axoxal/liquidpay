@@ -179,6 +179,15 @@ describe("carrier detection", () => {
 describe("123Pay pacing", () => {
   it("lengthens gaps between DTMF steps", () => {
     expect(build123PayDial("9876543210", "50", { pauses: 3 })).toEqual({ ok: true, href: "tel:08045163666,,,1,9876543210,,,50,,,1" });
-    expect(build123PayDial("9876543210", "50", { pauses: 99 }).ok && build123PayDial("9876543210", "50", { pauses: 99 })).toEqual({ ok: true, href: "tel:08045163666,,,,,,1,9876543210,,,,,,50,,,,,,1" });
+    expect(build123PayDial("9876543210", "50", { pauses: 99 }).ok && build123PayDial("9876543210", "50", { pauses: 99 })).toEqual({ ok: true, href: "tel:08045163666,,,,,,,,1,9876543210,,,,,,,,50,,,,,,,,1" });
+  });
+});
+
+describe("123Pay call script", () => {
+  it("waits for the welcome message and presses a language key", () => {
+    expect(build123PayDial("9876543210", "50", { startPauses: 5, langKey: "1" })).toEqual({ ok: true, href: "tel:08045163666,,,,,1,,1,,9876543210,,50,,1" });
+  });
+  it("guided mode uses dialer WAIT between every step", () => {
+    expect(build123PayDial("9876543210", "50", { guided: true })).toEqual({ ok: true, href: "tel:08045163666;1;9876543210;50;1" });
   });
 });
