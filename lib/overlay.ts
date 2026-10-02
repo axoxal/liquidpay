@@ -15,5 +15,7 @@ export function overlayLabels(t: TFn, payee: string, amount: string): OverlayLab
     statusWaiting: t("overlay.waiting"),
     statusRinging: t("overlay.ringing"),
     chooser: t("overlay.chooser"),
+    answerCall: t("overlay.answer"),
+    statusAnswered: t("overlay.answered"),
   };
 }

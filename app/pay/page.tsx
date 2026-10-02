@@ -51,9 +51,9 @@ function Pay() {
       : null;
 
   const options = useMemo(
-    () => (target ? routePayment({ target, amount, sims: settings.sims, online, ivrCap: settings.ivrCap }) : []),
+    () => (target ? routePayment({ target, amount, sims: settings.sims, online, ivrCap: settings.ivrCap, ivrPauses: settings.ivrPauses }) : []),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [vpa, mobile, name, note, amount, settings.sims, online, settings.ivrCap],
+    [vpa, mobile, name, note, amount, settings.sims, online, settings.ivrCap, settings.ivrPauses],
   );
   const firstLive = options.find((o) => o.available && o.id !== "queue")?.id ?? options.find((o) => o.available)?.id ?? null;
   const railId = picked && options.find((o) => o.id === picked)?.available ? picked : firstLive;
@@ -99,7 +99,7 @@ function Pay() {
     const s = reduceSession(createSession({ id: uid(), rail: rail.id, amount, payeeLabel, payeeId }, now), { type: "DIAL", now });
     setSession(s);
     if (rail.copyText) await copyText(rail.copyText);
-    if (rail.href) await openPaymentUri(rail.href, { simSlot: rail.simSlot, rail: rail.id, labels: overlayLabels(t, payeeLabel, amount) });
+    if (rail.href) await openPaymentUri(rail.href, { simSlot: rail.simSlot, rail: rail.id, labels: overlayLabels(t, payeeLabel, amount), listen: settings.ivrListen });
     router.push("/session");
   };
 

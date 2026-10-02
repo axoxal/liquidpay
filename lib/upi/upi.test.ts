@@ -175,3 +175,10 @@ describe("carrier detection", () => {
     expect(detectCarrier("Unknown", "404", "10")).toBe("other");
   });
 });
+
+describe("123Pay pacing", () => {
+  it("lengthens gaps between DTMF steps", () => {
+    expect(build123PayDial("9876543210", "50", { pauses: 3 })).toEqual({ ok: true, href: "tel:08045163666,,,1,9876543210,,,50,,,1" });
+    expect(build123PayDial("9876543210", "50", { pauses: 99 }).ok && build123PayDial("9876543210", "50", { pauses: 99 })).toEqual({ ok: true, href: "tel:08045163666,,,,,,1,9876543210,,,,,,50,,,,,,1" });
+  });
+});

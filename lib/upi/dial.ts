@@ -39,7 +39,7 @@ export function normalizeMobile(input: string): string {
 export function build123PayDial(
   phoneNumber: string,
   amount: string,
-  opts: { cap?: number; serviceNumber?: string } = {},
+  opts: { cap?: number; serviceNumber?: string; pauses?: number } = {},
 ): IvrResult {
   const service = (opts.serviceNumber ?? UPI123PAY_SERVICE_NUMBER).replace(/\D/g, "");
   const cap = opts.cap ?? UPI123PAY_DEFAULT_CAP;
@@ -53,7 +53,11 @@ export function build123PayDial(
   if (value < MIN_AMOUNT) return { ok: false, reason: "AMOUNT_BELOW_MINIMUM" };
   if (value > cap) return { ok: false, reason: "AMOUNT_ABOVE_CAP" };
 
-  return { ok: true, href: `tel:${service},,1,${phone},,${value},,1` };
+  // Each "," is ~2 s. Slower IVRs drop digits sent before the prompt finishes,
+  // so the gap is configurable (default 2 = Flowpay's field-tested string).
+  const n = Math.min(6, Math.max(1, Math.round(opts.pauses ?? 2)));
+  const gap = ",".repeat(n);
+  return { ok: true, href: `tel:${service}${gap}1,${phone}${gap}${value}${gap}1` };
 }
 
 /** `tel:` URI for a USSD code. `#` must be percent-encoded or dialers truncate at it. */

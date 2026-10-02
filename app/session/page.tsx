@@ -33,6 +33,9 @@ export default function SessionPage() {
   const [showPaste, setShowPaste] = useState(false);
   const [canDial] = useState(() => platform().native || platform().mobile);
   const [callStage, setCallStage] = useState<"calling" | "waiting" | "ringing" | null>(null);
+  // Length of the outgoing 123Pay call. A very short call usually means the
+  // number isn't registered for 123Pay yet, or the IVR dropped the digits.
+  const [callMs, setCallMs] = useState<number | null>(null);
 
   const dispatch = useCallback(
     (e: SessionEvent) => {
@@ -91,6 +94,7 @@ export default function SessionPage() {
         if (e.state === "ringing") setCallStage("ringing");
         if (e.state === "idle" && e.first) {
           setCallStage("waiting");
+          if (e.durationMs !== undefined) setCallMs(e.durationMs);
           dispatch({ type: "CALL_ENDED", now: Date.now(), durationMs: e.durationMs });
         }
       }),
@@ -130,6 +134,7 @@ export default function SessionPage() {
     sims: settings.sims,
     online,
     ivrCap: settings.ivrCap,
+    ivrPauses: settings.ivrPauses,
   }).find((o) => o.id === session.rail);
 
   const left = Math.max(0, (session.deadline ?? now) - now);
@@ -204,13 +209,26 @@ export default function SessionPage() {
         )}
 
         <div className="grid grid-cols-2 gap-3">
-          <Button tone="lime" size="md" onClick={() => opt?.href && openPaymentUri(opt.href, { simSlot: opt.simSlot, rail: opt.id, labels: overlayLabels(t, session.payeeLabel, session.amount) })} disabled={!opt?.href}>
+          <Button tone="lime" size="md" onClick={() => opt?.href && openPaymentUri(opt.href, { simSlot: opt.simSlot, rail: opt.id, labels: overlayLabels(t, session.payeeLabel, session.amount), listen: settings.ivrListen })} disabled={!opt?.href}>
             <PhoneCall size={18} /> {session.rail === "online" ? t("session.openApp") : t("session.callAgain")}
           </Button>
           <Button tone="glass" size="md" onClick={() => dispatch({ type: "CALL_ENDED", now: Date.now() })} disabled={session.phase !== "dialing"}>
             <PhoneOff size={18} /> {t("session.callEnded")}
           </Button>
         </div>
+
+        {callStage === "ringing" && isNativeApp() && (
+          <Button tone="forest" className="w-full" onClick={() => void LiquidPay.answerCall()}>
+            <PhoneCall size={20} /> {t("session.answer")}
+          </Button>
+        )}
+
+        {session.rail === "ivr123" && callMs !== null && callMs < 25000 && (
+          <div role="status" className="rounded-2xl bg-sun/80 p-3 text-sm font-medium text-navy">
+            {t("session.shortCall")}{" "}
+            <Link href="/settings#ivr" className="font-bold underline">{t("session.setup")}</Link>
+          </div>
+        )}
 
         {session.lastRejected && (
           <p role="status" className="rounded-2xl bg-danger/15 p-3 text-sm font-semibold text-danger">

@@ -56,6 +56,10 @@ export interface Settings {
   demoOffline: boolean;
   /** Show sample QRs and the simulated bank SMS button. */
   demoTools: boolean;
+  /** Unmuted payment call with no cover screen, to hear the 123Pay menu. */
+  ivrListen: boolean;
+  /** Dialer pauses (~2 s each) between 123Pay digits. */
+  ivrPauses: number;
 }
 
 interface State {
@@ -92,6 +96,8 @@ const defaultSettings: Settings = {
   walletWaitlist: false,
   demoOffline: false,
   demoTools: false,
+  ivrListen: false,
+  ivrPauses: 2,
 };
 
 export const useApp = create<State>()(

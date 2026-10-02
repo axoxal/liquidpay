@@ -10,7 +10,9 @@ import type { Carrier, Sim } from "@/lib/upi/rails";
 import { UPI123PAY_DEFAULT_CAP, UPI123PAY_RBI_CAP, VPA_REGEX } from "@/lib/upi/constants";
 import { Glass, Header, Segmented, Toggle, Field, inputCls } from "@/components/ui";
 import { PermissionsPanel } from "@/components/PermissionsPanel";
-import { isNativeApp } from "@/lib/native";
+import { isNativeApp, openPaymentUri } from "@/lib/native";
+import { UPI123PAY_SERVICE_NUMBER } from "@/lib/upi/constants";
+import { overlayLabels } from "@/lib/overlay";
 
 const CARRIERS: Carrier[] = ["jio", "airtel", "vi", "bsnl", "other"];
 const selectCls = "glass h-12 w-full rounded-2xl px-3 font-semibold text-ink outline-none";
@@ -72,6 +74,46 @@ export default function SettingsPage() {
               value={String(s.ivrCap)}
               onChange={(v) => setSettings({ ivrCap: Number(v) })}
               options={[{ id: String(UPI123PAY_DEFAULT_CAP), label: "₹4,999" }, { id: String(UPI123PAY_RBI_CAP), label: "₹10,000" }]}
+            />
+          </Field>
+        </Glass>
+
+        <div id="ivr" />
+        <Glass className="space-y-4 p-4">
+          <p className="font-bold">{t("settings.ivr")}</p>
+          <div className="flex items-center gap-3">
+            <div className="flex-1">
+              <p className="font-semibold">{t("settings.ivrSetup")}</p>
+              <p className="text-xs text-ink-soft">{t("settings.ivrSetup.sub")}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                openPaymentUri(`tel:${UPI123PAY_SERVICE_NUMBER}`, {
+                  simSlot: s.sims.find((x) => x.slot === 1)?.slot,
+                  rail: "setup",
+                  listen: true,
+                  labels: overlayLabels(t, "", "0"),
+                })
+              }
+              className="press shrink-0 rounded-full bg-lime px-4 py-2 text-sm font-bold text-navy"
+            >
+              {t("session.call")}
+            </button>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex-1">
+              <p className="font-semibold">{t("settings.ivrListen")}</p>
+              <p className="text-xs text-ink-soft">{t("settings.ivrListen.sub")}</p>
+            </div>
+            <Toggle checked={s.ivrListen} onChange={(v) => setSettings({ ivrListen: v })} label={t("settings.ivrListen")} />
+          </div>
+          <Field label={t("settings.ivrPauses")} hint={t("settings.ivrPauses.sub")}>
+            <Segmented
+              label={t("settings.ivrPauses")}
+              value={String(s.ivrPauses)}
+              onChange={(v) => setSettings({ ivrPauses: Number(v) })}
+              options={[{ id: "2", label: "4s" }, { id: "3", label: "6s" }, { id: "4", label: "8s" }]}
             />
           </Field>
         </Glass>

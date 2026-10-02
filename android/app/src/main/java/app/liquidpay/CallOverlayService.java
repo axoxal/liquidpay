@@ -55,9 +55,14 @@ public class CallOverlayService extends Service {
     }
 
     static void update(Context c, String status, boolean banner) {
+        update(c, status, banner, false);
+    }
+
+    /** answer = the bank is ringing back: show a one-tap Answer button. */
+    static void update(Context c, String status, boolean banner, boolean answer) {
         if (!Settings.canDrawOverlays(c)) return;
         c.startService(new Intent(c, CallOverlayService.class).setAction(ACTION_UPDATE)
-            .putExtra("status", status).putExtra("banner", banner));
+            .putExtra("status", status).putExtra("banner", banner).putExtra("answer", answer));
     }
 
     static void hide(Context c) {
@@ -76,14 +81,11 @@ public class CallOverlayService extends Service {
             build(intent, intent.getBooleanExtra("banner", false));
         } else if (ACTION_UPDATE.equals(action)) {
             boolean banner = intent.getBooleanExtra("banner", false);
-            if (root == null || banner != Boolean.TRUE.equals(root.getTag())) {
-                Intent merged = new Intent(intent);
-                if (lastShow != null) merged.putExtras(lastShow);
-                merged.putExtra("status", intent.getStringExtra("status"));
-                build(merged, banner);
-            } else if (statusView != null) {
-                statusView.setText(intent.getStringExtra("status"));
-            }
+            Intent merged = new Intent();
+            if (lastShow != null) merged.putExtras(lastShow);
+            merged.putExtra("status", intent.getStringExtra("status"));
+            merged.putExtra("answer", intent.getBooleanExtra("answer", false));
+            build(merged, banner);
         } else if (ACTION_HIDE.equals(action)) {
             hide();
         }
@@ -179,6 +181,12 @@ public class CallOverlayService extends Service {
                 LiquidPayPlugin.endCallStatic(this);
                 LiquidPayPlugin.emitOverlayAction("endCall");
                 hide();
+            }), half);
+        }
+        if (banner && in.getBooleanExtra("answer", false)) {
+            row.addView(button(str(in, "answerCall", "Answer"), Color.parseColor("#0F7A4C"), Color.WHITE, v -> {
+                LiquidPayPlugin.answerCallStatic(this);
+                CallOverlayService.update(this, str(in, "statusAnswered", ""), true, false);
             }), half);
         }
         row.addView(button(openLabel, LIME, NAVY, v -> {

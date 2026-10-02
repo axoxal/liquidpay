@@ -184,7 +184,7 @@ public class LiquidPayPlugin extends Plugin {
 
     private Intent overlayExtras(String status, boolean banner) {
         Intent i = new Intent();
-        String[] keys = { "title", "payee", "amount", "note", "endCall", "openApp" };
+        String[] keys = { "title", "payee", "amount", "note", "endCall", "openApp", "answerCall", "statusAnswered" };
         for (String k : keys) {
             String v = labels.getString(k);
             if (v != null) i.putExtra(k, v);
@@ -209,7 +209,10 @@ public class LiquidPayPlugin extends Plugin {
         }
         Integer slot = call.getInt("simSlot");
         rail = call.getString("rail", "ivr123");
-        muteRequested = call.getBoolean("mute", true) && "ivr123".equals(rail);
+        // Listen mode: no mute, no cover screen, so the user can hear the 123Pay
+        // menu (first-time registration, or to see where the digits go wrong).
+        boolean listen = call.getBoolean("listen", false);
+        muteRequested = !listen && call.getBoolean("mute", true) && "ivr123".equals(rail);
         JSObject l = call.getObject("labels");
         labels = l == null ? new JSObject() : l;
 
@@ -238,13 +241,35 @@ public class LiquidPayPlugin extends Plugin {
             return;
         }
         // USSD menus are a system dialog the user must see, so no overlay for *99#.
-        if ("ivr123".equals(rail)) {
+        if ("ivr123".equals(rail) && !listen) {
             main.postDelayed(() -> CallOverlayService.show(getContext(), overlayExtras(labels.getString("statusCalling", ""), false)), 400);
         }
         JSObject ret = new JSObject();
         ret.put("simSelected", handle != null);
         ret.put("overlay", Settings.canDrawOverlays(getContext()));
         call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void answerCall(PluginCall call) {
+        JSObject ret = new JSObject();
+        ret.put("answered", answerCallStatic(getContext()));
+        call.resolve(ret);
+    }
+
+    /** Picks up the ringing call (the bank's PIN callback). Needs ANSWER_PHONE_CALLS. */
+    @SuppressLint("MissingPermission")
+    static boolean answerCallStatic(Context c) {
+        try {
+            if (Build.VERSION.SDK_INT < 26) return false;
+            if (c.checkSelfPermission(Manifest.permission.ANSWER_PHONE_CALLS) != android.content.pm.PackageManager.PERMISSION_GRANTED) return false;
+            TelecomManager tm = (TelecomManager) c.getSystemService(Context.TELECOM_SERVICE);
+            if (tm == null) return false;
+            tm.acceptRingingCall();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @PluginMethod
@@ -345,7 +370,7 @@ public class LiquidPayPlugin extends Plugin {
             ev.put("state", "ringing");
             // Usually the bank calling back for the UPI PIN.
             if (outgoingEnded && "ivr123".equals(rail)) {
-                CallOverlayService.update(getContext(), labels.getString("statusRinging", ""), true);
+                CallOverlayService.update(getContext(), labels.getString("statusRinging", ""), true, true);
             }
         } else {
             ev.put("state", "idle");

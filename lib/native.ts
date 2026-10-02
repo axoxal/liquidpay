@@ -30,6 +30,8 @@ export interface OverlayLabels {
   statusWaiting: string;
   statusRinging: string;
   chooser: string;
+  answerCall: string;
+  statusAnswered: string;
 }
 
 export interface CallStateEvent {
@@ -46,8 +48,9 @@ interface LiquidPayPlugin {
   getOverlayPermission(): Promise<{ granted: boolean }>;
   openOverlaySettings(): Promise<void>;
   openAppSettings(): Promise<void>;
-  dial(opts: { href: string; simSlot?: number; rail: string; mute?: boolean; labels: Partial<OverlayLabels> }): Promise<{ simSelected: boolean; overlay: boolean }>;
+  dial(opts: { href: string; simSlot?: number; rail: string; mute?: boolean; listen?: boolean; labels: Partial<OverlayLabels> }): Promise<{ simSelected: boolean; overlay: boolean }>;
   endCall(): Promise<{ ended: boolean }>;
+  answerCall(): Promise<{ answered: boolean }>;
   finishPayment(): Promise<void>;
   updateOverlay(opts: { status: string; banner: boolean }): Promise<void>;
   takePendingSms(): Promise<{ messages: { sender: string; body: string; at: number }[] }>;
@@ -74,6 +77,8 @@ export interface OpenOptions {
   simSlot?: 1 | 2;
   rail?: string;
   labels?: Partial<OverlayLabels>;
+  /** Unmuted call with no cover screen. */
+  listen?: boolean;
 }
 
 /** Open a tel: or upi: URI. Returns false when this device can't place it. */
@@ -81,7 +86,7 @@ export async function openPaymentUri(href: string, opts: OpenOptions = {}): Prom
   if (isNativeApp()) {
     try {
       if (href.startsWith("upi:")) await LiquidPay.openUri({ href });
-      else await LiquidPay.dial({ href, simSlot: opts.simSlot, rail: opts.rail ?? "ivr123", mute: true, labels: opts.labels ?? {} });
+      else await LiquidPay.dial({ href, simSlot: opts.simSlot, rail: opts.rail ?? "ivr123", mute: !opts.listen, listen: !!opts.listen, labels: opts.labels ?? {} });
       return true;
     } catch {
       return false;
